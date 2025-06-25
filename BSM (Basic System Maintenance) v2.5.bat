@@ -20,9 +20,9 @@ echo (c) 2025 LB-Works (TM) - All Rights Reserved
 echo.
 echo ---------------------------------------------------------------------------------------------
 echo.
-echo BSM (Basic System Maintenance) v2.4
+echo BSM (Basic System Maintenance) v2.5
 echo WARNING: Please read README.ML before running this script.
-set /p choices=Enter "scan" to run a Full scan. (to learn more, check README.ML)
+set /p choices=Enter "scan" to run a Full scan. To activate Plugins, type "plugin" next to it. (to learn more, check README.ML)
 
 for %%c in (%choices%) do (
     call :runChoice %%c
@@ -35,7 +35,21 @@ pause
 
 :runChoice
 
+if "%1"=="plugin" (
+echo.
+echo [*] Loading Plugins...
+for %%F in ("plugins\*.bat") do (
+    echo Running plugin: %%~nxF
+    call "%%F"
+    echo Finished: %%~nxF
+)
+)
+
 if "%1"=="scan" (
+:: Delete all system restore points
+echo Deleting all system restore points...
+vssadmin Delete Shadows /All /Quiet
+
 :: Run System File Checker
 echo Running System File Checker...
 sfc /scannow
@@ -120,10 +134,6 @@ echo Clearing Brave cache...
 rmdir /s /q "%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data\Default\Cache"
 rmdir /s /q "%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data\Default\Code Cache"
 
-:: Delete all system restore points
-echo Deleting all system restore points...
-vssadmin Delete Shadows /All /Quiet
-
 :: Delete Explorer recent file list
 echo Deleting Explorer recent file list...
 del /q "%appdata%\Microsoft\Windows\Recent\*.*"
@@ -199,7 +209,10 @@ powershell -command "Clear-RecycleBin -Force"
 :: Scan log
 echo [%date% %time%] Maintenance complete. >> "%USERPROFILE%\Desktop\BSM_log.txt"
 
-echo Done!
+pushd "%~dp0"
+cscript //nologo "data\notification.vbs"
+popd
+
 pause
 )
 
@@ -400,4 +413,5 @@ if "%1"=="20" (
 echo Emptying Recycle Bin...
 powershell -command "Clear-RecycleBin -Force"
 )
+
 pause
